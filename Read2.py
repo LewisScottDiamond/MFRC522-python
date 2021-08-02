@@ -5,6 +5,7 @@ import RPi.GPIO as GPIO
 import MFRC522
 import signal
 import time
+import threading
 
 continue_reading = True
 
@@ -31,24 +32,54 @@ signal.signal(signal.SIGINT, end_read)
 # Create an object of the class MFRC522
 MIFAREReader = MFRC522.MFRC522()
 
+# Create a second object of the class MFRC522
+MIFAREReader2 = MFRC522.MFRC522(dev=1)
+
 # Welcome message
 print("Welcome to the MFRC522 data read example")
 print("Press Ctrl-C to stop.")
 
 # This loop keeps checking for chips.
 # If one is near it will get the UID and authenticate
-while continue_reading:
 
-    # Scan for cards
-    (status, TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
+def thread_one(name):
+    while continue_reading:
 
-    # If a card is found
-    if status == MIFAREReader.MI_OK:
-        print ("Card detected")
+        # Scan for cards
+        (status, TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
 
-        # Get the UID of the card
-        (status, uid) = MIFAREReader.MFRC522_SelectTagSN()
-        # If we have the UID, continue
+        # If a card is found
         if status == MIFAREReader.MI_OK:
-            print("Card read UID: %s" % uidToString(uid))
-            print("here")
+            print ("Card detected")
+
+            # Get the UID of the card
+            (status, uid) = MIFAREReader.MFRC522_SelectTagSN()
+
+            # If we have the UID, continue
+            if status == MIFAREReader.MI_OK:
+                print("Card read UID: %s" % uidToString(uid))
+
+def thread_two(name):
+    while continue_reading:
+
+        # Scan for cards
+        (status2, TagType2) = MIFAREReader2.MFRC522_Request(MIFAREReader.PICC_REQIDL)
+
+        # If a card is found
+        if status2 == MIFAREReader2.MI_OK:
+            print ("Card detected")
+
+            # Get the UID of the card
+            (status2, uid2) = MIFAREReader2.MFRC522_SelectTagSN()
+
+            # If we have the UID, continue
+            if status2 == MIFAREReader2.MI_OK:
+                print("Card read UID: %s" % uidToString(uid2))
+
+x = threading.Thread(target=thread_one, args=(1,))
+
+x.start()
+
+y = threading.Thread(target=thread_two, args=(1,))
+
+y.start()
