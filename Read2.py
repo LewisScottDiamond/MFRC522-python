@@ -9,7 +9,6 @@ import threading
 
 continue_reading = True
 
-
 # function to read uid an conver it to a string
 
 def uidToString(uid):
@@ -29,20 +28,17 @@ def end_read(signal, frame):
 # Hook the SIGINT
 signal.signal(signal.SIGINT, end_read)
 
-# Create an object of the class MFRC522
+# Create an object of the class MFRC522 for device 0
 MIFAREReader = MFRC522.MFRC522()
 
-# Create a second object of the class MFRC522
+# Create a second object of the class MFRC522 for device 1
 MIFAREReader2 = MFRC522.MFRC522(dev=1)
 
 # Welcome message
 print("Welcome to the MFRC522 data read example")
 print("Press Ctrl-C to stop.")
 
-# This loop keeps checking for chips.
-# If one is near it will get the UID and authenticate
-
-def thread_one(name):
+def rfid_scanner_one(name):
     while continue_reading:
 
         # Scan for cards
@@ -59,7 +55,7 @@ def thread_one(name):
             if status == MIFAREReader.MI_OK:
                 print("Card read UID: %s" % uidToString(uid))
 
-def thread_two(name):
+def rfid_scanner_two(name):
     while continue_reading:
 
         # Scan for cards
@@ -76,10 +72,14 @@ def thread_two(name):
             if status2 == MIFAREReader2.MI_OK:
                 print("Card read UID: %s" % uidToString(uid2))
 
-x = threading.Thread(target=thread_one, args=(1,))
 
+# These thread loops keep checking for chips.
+# If one is near either sensor it will get the UID
+
+# create and start the thread for the first rfid scanner
+x = threading.Thread(target=rfid_scanner_one, args=(1,))
 x.start()
 
-y = threading.Thread(target=thread_two, args=(1,))
-
+# create and start the thread for the second rfid scanner
+y = threading.Thread(target=rfid_scanner_two, args=(1,))
 y.start()
