@@ -46,7 +46,7 @@ def rfid_scanner_one(name):
 
         # If a card is found
         if status == MIFAREReader.MI_OK:
-            print ("Card detected")
+            print ("Card detected on reader 1")
 
             # Get the UID of the card
             (status, uid) = MIFAREReader.MFRC522_SelectTagSN()
@@ -63,7 +63,7 @@ def rfid_scanner_two(name):
 
         # If a card is found
         if status2 == MIFAREReader2.MI_OK:
-            print ("Card detected")
+            print ("Card detected on reader 2")
 
             # Get the UID of the card
             (status2, uid2) = MIFAREReader2.MFRC522_SelectTagSN()
