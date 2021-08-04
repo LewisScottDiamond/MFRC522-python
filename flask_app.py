@@ -8,6 +8,7 @@ import threading
 import RPi.GPIO as GPIO
 import MFRC522
 import signal
+import sys
 
 
 from flask import Flask
@@ -17,14 +18,22 @@ app = Flask(__name__)
 def activate_job():
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
+
     BUZZER1=17
     BUZZER2=14
+    DOOR_SENSOR_PIN = 26
+
     GPIO.setup(BUZZER1, GPIO.OUT)
     GPIO.setup(BUZZER2, GPIO.OUT)
     GPIO.output(BUZZER1, True)
     GPIO.output(BUZZER2, True)
 
+    # Set up the door sensor pin.
+    GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+
     continue_reading = True
+    isOpen = None
+    door_one = False
 
     def sound_buzzer():
         GPIO.output(BUZZER1, False)
@@ -38,6 +47,27 @@ def activate_job():
         GPIO.output(BUZZER2, True)
         time.sleep(1)
 
+    def check_door1():
+        while continue_reading:
+            isOpen = GPIO.input(DOOR_SENSOR_PIN)
+            if (isOpen):
+                print("open")
+                door1 = threading.Thread(target=change_door1_state)
+                door1.start()
+            else:
+                print("closed")
+                door_one = False
+            time.sleep(0.5)
+
+    def change_door1_state():
+        global door_one
+        print("change door one state to true")
+        door_one = True
+        print("door one = %s" % door_one)
+        time.sleep(10)
+        print("change door one state to false")
+        door_one = False
+        print("door one = %s" % door_one)
     # function to read uid an conver it to a string
 
     def uidToString(uid):
@@ -114,6 +144,9 @@ def activate_job():
     # create and start the thread for the second rfid scanner
     y = threading.Thread(target=rfid_scanner_two, args=(1,))
     y.start()
+
+    checkDoor1 = threading.Thread(target=check_door1)
+    checkDoor1.start()
 
 @app.route("/")
 def hello():
