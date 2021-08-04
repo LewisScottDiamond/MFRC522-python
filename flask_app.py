@@ -34,8 +34,9 @@ def activate_job():
         # Buzzer2
         GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
 
-    # Set up the door sensor pin.
+    # Set up the door sensor pins.
     GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+    GPIO.setup(DOOR_SENSOR_PIN2, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
     continue_reading = True
     isOpen = None
@@ -72,14 +73,28 @@ def activate_job():
         while continue_reading:
             isOpen = GPIO.input(DOOR_SENSOR_PIN)
             if (isOpen):
-                print("open")
+                print("entry door open")
                 if (entry_scanned == False):
                     buzzer1 = threading.Thread(target=sound_buzzer("bad"))
                     buzzer1.start()
                 door_one = True
             else:
-                print("closed")
+                print("entry door closed")
                 door_one = False
+            time.sleep(0.5)
+
+    def check_door2():
+        while continue_reading:
+            isOpen = GPIO.input(DOOR_SENSOR_PIN2)
+            if (isOpen):
+                print("exit door open")
+                if (exit_scanned == False):
+                    buzzer2 = threading.Thread(target=sound_buzzer("bad"))
+                    buzzer2.start()
+                door_two = True
+            else:
+                print("exit door closed")
+                door_two = False
             time.sleep(0.5)
 
     def entryScanned():
@@ -88,6 +103,14 @@ def activate_job():
         print("entry scanned")
         time.sleep(10)
         entry_scanned = False
+        print("entry no longer scanned")
+
+    def exitScanned():
+        global exit_scanned
+        exit_scanned = True
+        print("entry scanned")
+        time.sleep(10)
+        exit_scanned = False
         print("entry no longer scanned")
 
     def uidToString(uid):
@@ -155,6 +178,8 @@ def activate_job():
                     print("Card read UID: %s" % uidToString(uid2))
                     buzzer2 = threading.Thread(target=sound_buzzer2("good"))
                     buzzer2.start()
+                    exit = threading.Thread(target=exitScanned())
+                    exit.start()
 
     # Setup the buzzers
     buzzer_setup()
@@ -173,6 +198,10 @@ def activate_job():
     checkDoor1 = threading.Thread(target=check_door1)
     checkDoor1.start()
 
+
+    checkDoor2 = threading.Thread(target=check_door2)
+    checkDoor2.start()
+
 @app.route("/")
 def hello():
     return "Hello World!"
@@ -180,6 +209,7 @@ def hello():
 BUZZER1=17
 BUZZER2=14
 DOOR_SENSOR_PIN = 26
+DOOR_SENSOR_PIN2 = 19
 entry_scanned = False
 exit_scanned = False
 
