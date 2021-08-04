@@ -171,7 +171,12 @@ def start_runner():
     print('Started runner')
     thread = threading.Thread(target=start_loop)
     thread.start()
+def destory():
+    GPIO.cleanup()
 
 if __name__ == "__main__":
     start_runner()
-    app.run(host='0.0.0.0')
+    try:
+        app.run(host='0.0.0.0')
+    except KeyboardInterrupt:       # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
+        destory()
