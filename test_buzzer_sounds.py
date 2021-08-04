@@ -51,19 +51,6 @@ def setup():
     Buzz = GPIO.PWM(Buzzer, 440)    # 440 is initial frequency.
     Buzz.start(50)                                  # Start Buzzer pin with 50% duty ration
 
-
-def on():
-	GPIO.output(BuzzerPin, GPIO.LOW)
-	#Low level is ringing
-def off():
-	GPIO.output(BuzzerPin, GPIO.HIGH)
-	#High level is to stop ringing
-def beep(x):    #3 seconds after ringing for 3 seconds
-	on()
-	time.sleep(x)
-	off()
-	time.sleep(x)
-
 def loop():
     while True:
 #--------------------------------------------

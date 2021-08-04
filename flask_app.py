@@ -9,6 +9,7 @@ import RPi.GPIO as GPIO
 import MFRC522
 import signal
 import sys
+import atexit
 
 
 from flask import Flask
@@ -19,14 +20,21 @@ def activate_job():
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
 
-    BUZZER1=17
-    BUZZER2=14
-    DOOR_SENSOR_PIN = 26
+    global BUZZER1
+    global BUZZER2
+    global DOOR_SENSOR_PIN
 
-    GPIO.setup(BUZZER1, GPIO.OUT)
-    GPIO.setup(BUZZER2, GPIO.OUT)
-    GPIO.output(BUZZER1, True)
-    GPIO.output(BUZZER2, True)
+    def buzzer_setup():
+        # Buzzer1
+        GPIO.setup(BUZZER1, GPIO.OUT)    # Set pins' mode is output
+        global buzz1                                             # Assign a global variable to replace GPIO.PWM
+        buzz1 = GPIO.PWM(BUZZER1, 1)    # 440 is initial frequency.
+
+
+        # Buzzer2
+        GPIO.setup(BUZZER2, GPIO.OUT)    # Set pins' mode is output
+        global buzz2                                             # Assign a global variable to replace GPIO.PWM
+        buzz2 = GPIO.PWM(BUZZER2, 1)    # 440 is initial frequency.
 
     # Set up the door sensor pin.
     GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down = GPIO.PUD_UP)
@@ -36,16 +44,16 @@ def activate_job():
     door_one = False
 
     def sound_buzzer():
-        GPIO.output(BUZZER1, False)
+        print("here")
+        buzz1.ChangeFrequency(550)
+        buzz1.start(1)
         time.sleep(1)
-        GPIO.output(BUZZER1, True)
-        time.sleep(1)
+        buzz1.stop(1)
 
     def sound_buzzer2():
-        GPIO.output(BUZZER2, False)
+        buzz2.ChangeFrequency(300)
         time.sleep(1)
-        GPIO.output(BUZZER2, True)
-        time.sleep(1)
+        buzz2.stop()
 
     def check_door1():
         while continue_reading:
@@ -112,8 +120,8 @@ def activate_job():
                 # If we have the UID, continue
                 if status == MIFAREReader.MI_OK:
                     print("Card read UID: %s" % uidToString(uid))
-                    buzz2 = threading.Thread(target=sound_buzzer2)
-                    buzz2.start()
+                    buzzer1 = threading.Thread(target=sound_buzzer)
+                    buzzer1.start()
 
     def rfid_scanner_two(name):
         while continue_reading:
@@ -131,8 +139,11 @@ def activate_job():
                 # If we have the UID, continue
                 if status2 == MIFAREReader2.MI_OK:
                     print("Card read UID: %s" % uidToString(uid2))
-                    buzz = threading.Thread(target=sound_buzzer)
-                    buzz.start()
+                    buzzer2 = threading.Thread(target=sound_buzzer2)
+                    buzzer2.start()
+
+    # Setup the buzzers
+    buzzer_setup()
 
     # These thread loops keep checking for chips.
     # If one is near either sensor it will get the UID
@@ -152,6 +163,9 @@ def activate_job():
 def hello():
     return "Hello World!"
 
+BUZZER1=17
+BUZZER2=14
+DOOR_SENSOR_PIN = 26
 
 def start_runner():
     def start_loop():
@@ -171,12 +185,19 @@ def start_runner():
     print('Started runner')
     thread = threading.Thread(target=start_loop)
     thread.start()
+
 def destory():
+    global BUZZER1
+    global BUZZER2
+    buzz1.stop()                                     # Stop the buzzer1
+    GPIO.output(BUZZER1, 1)          # Set Buzzer1 pin to High
+    buzz2.stop()                                     # Stop the buzzer2
+    GPIO.output(BUZZER2, 1)          # Set Buzzer2 pin to High
     GPIO.cleanup()
+    print("System stopped")
+
+atexit.register(destory)
 
 if __name__ == "__main__":
     start_runner()
-    try:
-        app.run(host='0.0.0.0')
-    except KeyboardInterrupt:       # When 'Ctrl+C' is pressed, the child program destroy() will be  executed.
-        destory()
+    app.run(host='0.0.0.0')
