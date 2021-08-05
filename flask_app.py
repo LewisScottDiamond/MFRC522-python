@@ -25,6 +25,8 @@ def activate_job():
     global DOOR_SENSOR_PIN
     global entry_scanned
     global exit_scanned
+    global DOOR_ONE_RED_LED_PIN
+    global DOOR_ONE_GREEN_LED_PIN
 
     def buzzer_setup():
         # Buzzer1
@@ -38,9 +40,39 @@ def activate_job():
     GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down = GPIO.PUD_UP)
     GPIO.setup(DOOR_SENSOR_PIN2, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
+    # set up the LED pins
+    GPIO.setup(DOOR_ONE_RED_LED_PIN, GPIO.OUT)   # Set ledPin as output
+    GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
+    GPIO.setup(DOOR_ONE_GREEN_LED_PIN, GPIO.OUT)   # Set ledPin as output
+    GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
+
     continue_reading = True
     isOpen = None
     door_one = False
+
+    def door_one_action(type):
+        if(type == "bad"):
+            GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.HIGH)
+            for number in range(50):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
+                time.sleep(0.01)
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
+                time.sleep(0.01)
+            time.sleep(9)
+            GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)
+        else:
+            global entry_scanned
+            entry_scanned = True
+            print("entry scanned")
+            GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.HIGH)
+            GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
+            time.sleep(0.2)
+            GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
+            time.sleep(9.8)
+            GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)
+            entry_scanned = False
+            print("entry no longer scanned")
+
 
     def sound_buzzer(type):
         print("start buzzer")
@@ -155,9 +187,7 @@ def activate_job():
                 # If we have the UID, continue
                 if status == MIFAREReader.MI_OK:
                     print("Card read UID: %s" % uidToString(uid))
-                    buzzer1 = threading.Thread(target=sound_buzzer("good"))
-                    buzzer1.start()
-                    enter = threading.Thread(target=entryScanned())
+                    enter = threading.Thread(target=door_one_action("good"))
                     enter.start()
 
     def rfid_scanner_two(name):
@@ -208,6 +238,8 @@ def hello():
 
 BUZZER1=17
 BUZZER2=14
+DOOR_ONE_RED_LED_PIN=21
+DOOR_ONE_GREEN_LED_PIN=20
 DOOR_SENSOR_PIN = 26
 DOOR_SENSOR_PIN2 = 19
 entry_scanned = False
