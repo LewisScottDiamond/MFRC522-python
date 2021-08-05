@@ -56,7 +56,7 @@ def activate_job():
             GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
 
 
-    def sound_buzzer2():
+    def sound_buzzer2(type):
         print("start buzzer")
         if (type == "bad"):
             for number in range(50):
