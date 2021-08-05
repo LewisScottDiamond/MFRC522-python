@@ -10,6 +10,7 @@ import MFRC522
 import signal
 import sys
 import atexit
+import textFileFunctions as tff
 
 
 from flask import Flask
@@ -186,9 +187,15 @@ def activate_job():
 
                 # If we have the UID, continue
                 if status == MIFAREReader.MI_OK:
-                    print("Card read UID: %s" % uidToString(uid))
-                    enter = threading.Thread(target=door_one_action("good"))
-                    enter.start()
+                    guid = tff.find_guid_in_csv_file('uid.csv', uidToString(uid))
+                    if(guid == False):
+                        print("Card UID: %s Not found!" % uidToString(uid))
+                        enter = threading.Thread(target=door_one_action("bad"))
+                        enter.start()
+                    else:
+                        print("Card read UID: %s" % uidToString(uid))
+                        enter = threading.Thread(target=door_one_action("good"))
+                        enter.start()
 
     def rfid_scanner_two(name):
         while continue_reading:

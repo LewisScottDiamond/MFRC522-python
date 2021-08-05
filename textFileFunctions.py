@@ -1,4 +1,5 @@
-# Pass in the filename and a string to be appended on a separate line
+import csv
+
 def append_new_line(file_name, text_to_append):
     """Append given text as a new line at the end of file"""
     # Open the file in append & read mode ('a+')
@@ -12,7 +13,7 @@ def append_new_line(file_name, text_to_append):
         # Append text at the end of file
         file_object.write(text_to_append)
 
-# Pass in the file name and an array of strings to be appended to the file on separate lines
+
 def append_multiple_lines(file_name, lines_to_append):
     # Open the file in append & read mode ('a+')
     with open(file_name, "a+") as file_object:
@@ -33,3 +34,37 @@ def append_multiple_lines(file_name, lines_to_append):
                 appendEOL = True
             # Append element at the end of file
             file_object.write(line)
+
+def read_csv_file(file_name):
+    with open(file_name) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            if line_count == 0:
+                print(f'{", ".join(row)}')
+                line_count += 1
+            else:
+                print(f'UID: \t{row[0]} - GUID: {row[1]}')
+                line_count += 1
+        print(f'Processed {line_count} lines.')
+
+def find_guid_in_csv_file(file_name, uid):
+    guid = ""
+    with open(file_name) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        line_count = 0
+        for row in csv_reader:
+            if line_count == 0:
+                #print(f'{", ".join(row)}')
+                line_count += 1
+            else:
+                #print(f'UID: \t{row[0]} - GUID: {row[1]}')
+                if(uid == row[0]):
+                    guid = row[1]
+                line_count += 1
+
+        #print(f'Processed {line_count} lines.')
+        if(guid):
+            return guid
+        else:
+            return False
