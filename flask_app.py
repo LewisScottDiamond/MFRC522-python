@@ -28,6 +28,8 @@ def activate_job():
     global exit_scanned
     global DOOR_ONE_RED_LED_PIN
     global DOOR_ONE_GREEN_LED_PIN
+    global DOOR_TWO_RED_LED_PIN
+    global DOOR_TWO_GREEN_LED_PIN
 
     def buzzer_setup():
         # Buzzer1
@@ -46,6 +48,11 @@ def activate_job():
     GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
     GPIO.setup(DOOR_ONE_GREEN_LED_PIN, GPIO.OUT)   # Set ledPin as output
     GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
+
+    GPIO.setup(DOOR_TWO_RED_LED_PIN, GPIO.OUT)   # Set ledPin as output
+    GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
+    GPIO.setup(DOOR_TWO_GREEN_LED_PIN, GPIO.OUT)   # Set ledPin as output
+    GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
 
     continue_reading = True
     isOpen = None
@@ -73,6 +80,29 @@ def activate_job():
             GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)
             entry_scanned = False
             print("entry no longer scanned")
+
+    def door_two_action(type):
+        if(type == "bad"):
+            GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.HIGH)
+            for number in range(50):
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
+                time.sleep(0.01)
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
+                time.sleep(0.01)
+            time.sleep(9)
+            GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)
+        else:
+            global entry_scanned
+            exit_scanned = True
+            print("exit scanned")
+            GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.HIGH)
+            GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
+            time.sleep(0.2)
+            GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
+            time.sleep(9.8)
+            GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)
+            exit_scanned = False
+            print("exit no longer scanned")
 
 
     def sound_buzzer(type):
@@ -212,11 +242,15 @@ def activate_job():
 
                 # If we have the UID, continue
                 if status2 == MIFAREReader2.MI_OK:
-                    print("Card read UID: %s" % uidToString(uid2))
-                    buzzer2 = threading.Thread(target=sound_buzzer2("good"))
-                    buzzer2.start()
-                    exit = threading.Thread(target=exitScanned())
-                    exit.start()
+                    guid = tff.find_guid_in_csv_file('uid.csv', uidToString(uid2))
+                    if(guid == False):
+                        print("Card UID: %s Not found!" % uidToString(uid2))
+                        exit = threading.Thread(target=door_two_action("bad"))
+                        exit.start()
+                    else:
+                        print("Card read UID: %s" % uidToString(uid2))
+                        exit = threading.Thread(target=door_two_action("good"))
+                        exit.start()
 
     # Setup the buzzers
     buzzer_setup()
@@ -247,6 +281,8 @@ BUZZER1=17
 BUZZER2=14
 DOOR_ONE_RED_LED_PIN=21
 DOOR_ONE_GREEN_LED_PIN=20
+DOOR_TWO_RED_LED_PIN=16
+DOOR_TWO_GREEN_LED_PIN=12
 DOOR_SENSOR_PIN = 26
 DOOR_SENSOR_PIN2 = 19
 entry_scanned = False
