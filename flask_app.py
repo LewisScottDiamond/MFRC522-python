@@ -68,6 +68,24 @@ def activate_job():
             if not GPIO.input(DOOR_ONE_RED_LED_PIN):
                 GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.HIGH)
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -1.9) and timeNow() < addSecs(waitTime, -1.8)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
+            if(timeNow() > addSecs(waitTime, -1.7) and timeNow() < addSecs(waitTime, -1.6)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -1.5) and timeNow() < addSecs(waitTime, -1.4)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
+            if(timeNow() > addSecs(waitTime, -1.3) and timeNow() < addSecs(waitTime, -1.2)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -1.1) and timeNow() < addSecs(waitTime, -1)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
+            if(timeNow() > addSecs(waitTime, -0.9) and timeNow() < addSecs(waitTime, -0.8)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -0.7) and timeNow() < addSecs(waitTime, -0.6)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
+            if(timeNow() > addSecs(waitTime, -0.5) and timeNow() < addSecs(waitTime, -0.4)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -0.3) and timeNow() < addSecs(waitTime, -0.2)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
         else:
             if not GPIO.input(DOOR_ONE_GREEN_LED_PIN):
                 GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.HIGH)
@@ -179,17 +197,17 @@ def activate_job():
 
     # method to add seconds to the time passed in
     def addSecs(tm, secs):
-        fulldate = datetime.datetime(100, 1, 1, tm.hour, tm.minute, tm.second)
-        fulldate = fulldate + datetime.timedelta(seconds=secs)
-        return fulldate.time()
+        fulldate = tm
+        fulldate = fulldate + datetime.timedelta(0, secs)
+        return fulldate
 
     def currentTimePlusSeconds(seconds):
-        currentTime = datetime.datetime.now().time()
+        currentTime = datetime.datetime.now()
         newTime = addSecs(currentTime, seconds)
         return newTime
 
     def timeNow():
-        return datetime.datetime.now().time()
+        return datetime.datetime.now()
 
     # Create an object of the class MFRC522 for device 0
     MIFAREReader = MFRC522.MFRC522()
@@ -211,8 +229,6 @@ def activate_job():
         entry_scanned = False
 
         while continue_reading:
-
-
             # Scan for cards
             if (waitTimeGood > timeNow()):
                 door_one_action("good", waitTimeGood)
