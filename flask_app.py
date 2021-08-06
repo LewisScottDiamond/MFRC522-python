@@ -31,32 +31,34 @@ def activate_job():
     global DOOR_TWO_RED_LED_PIN
     global DOOR_TWO_GREEN_LED_PIN
 
-    def buzzer_setup():
+    def GPIO_Setup():
         # Buzzer1
         GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
-
 
         # Buzzer2
         GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
 
-    # Set up the door sensor pins.
-    GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down = GPIO.PUD_UP)
-    GPIO.setup(DOOR_SENSOR_PIN2, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+        # Set up the door sensor pins.
+        GPIO.setup(DOOR_SENSOR_PIN, GPIO.IN, pull_up_down = GPIO.PUD_UP)
+        GPIO.setup(DOOR_SENSOR_PIN2, GPIO.IN, pull_up_down = GPIO.PUD_UP)
 
-    # set up the LED pins
-    GPIO.setup(DOOR_ONE_RED_LED_PIN, GPIO.OUT)   # Set ledPin as output
-    GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
-    GPIO.setup(DOOR_ONE_GREEN_LED_PIN, GPIO.OUT)   # Set ledPin as output
-    GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
+        # set up door one's LED pins
+        GPIO.setup(DOOR_ONE_RED_LED_PIN, GPIO.OUT)   # Set ledPin as output
+        GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
+        GPIO.setup(DOOR_ONE_GREEN_LED_PIN, GPIO.OUT)   # Set ledPin as output
+        GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
 
-    GPIO.setup(DOOR_TWO_RED_LED_PIN, GPIO.OUT)   # Set ledPin as output
-    GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
-    GPIO.setup(DOOR_TWO_GREEN_LED_PIN, GPIO.OUT)   # Set ledPin as output
-    GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
+        # setup door two's LED pins
+        GPIO.setup(DOOR_TWO_RED_LED_PIN, GPIO.OUT)   # Set ledPin as output
+        GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
+        GPIO.setup(DOOR_TWO_GREEN_LED_PIN, GPIO.OUT)   # Set ledPin as output
+        GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)  # Set ledPin to LOW to turn Off the LED
 
     continue_reading = True
     isOpen = None
+    isOpen2 = None
     door_one = False
+    door_two = False
 
     def door_one_action(type):
         if(type == "bad"):
@@ -66,7 +68,7 @@ def activate_job():
                 time.sleep(0.01)
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
                 time.sleep(0.01)
-            time.sleep(9)
+            time.sleep(2)
             GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)
         else:
             global entry_scanned
@@ -89,7 +91,7 @@ def activate_job():
                 time.sleep(0.01)
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
                 time.sleep(0.01)
-            time.sleep(9)
+            time.sleep(2)
             GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)
         else:
             global entry_scanned
@@ -148,8 +150,8 @@ def activate_job():
 
     def check_door2():
         while continue_reading:
-            isOpen = GPIO.input(DOOR_SENSOR_PIN2)
-            if (isOpen):
+            isOpen2 = GPIO.input(DOOR_SENSOR_PIN2)
+            if (isOpen2):
                 print("exit door open")
                 if (exit_scanned == False):
                     buzzer2 = threading.Thread(target=sound_buzzer("bad"))
@@ -223,7 +225,7 @@ def activate_job():
                         enter = threading.Thread(target=door_one_action("bad"))
                         enter.start()
                     else:
-                        print("Card read UID: %s" % uidToString(uid))
+                        print("Card read GUID: %s" % guid)
                         enter = threading.Thread(target=door_one_action("good"))
                         enter.start()
 
@@ -248,12 +250,12 @@ def activate_job():
                         exit = threading.Thread(target=door_two_action("bad"))
                         exit.start()
                     else:
-                        print("Card read UID: %s" % uidToString(uid2))
+                        print("Card read UID: %s" % guid)
                         exit = threading.Thread(target=door_two_action("good"))
                         exit.start()
 
-    # Setup the buzzers
-    buzzer_setup()
+    # Setup the GPIO pins
+    GPIO_Setup()
 
     # These thread loops keep checking for chips.
     # If one is near either sensor it will get the UID
