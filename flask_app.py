@@ -11,6 +11,7 @@ import signal
 import sys
 import atexit
 import textFileFunctions as tff
+import datetime
 
 
 from flask import Flask
@@ -60,28 +61,20 @@ def activate_job():
     door_one = False
     door_two = False
 
-    def door_one_action(type):
+    def door_one_action(type, waitTime):
+        global entry_scanned
+        entry_scanned = True
         if(type == "bad"):
-            GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.HIGH)
-            for number in range(50):
+            if not GPIO.input(DOOR_ONE_RED_LED_PIN):
+                GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.HIGH)
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
-                time.sleep(0.01)
-                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
-                time.sleep(0.01)
-            time.sleep(2)
-            GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)
         else:
-            global entry_scanned
-            entry_scanned = True
-            print("entry scanned")
-            GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.HIGH)
-            GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
-            time.sleep(0.2)
-            GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
-            time.sleep(9.8)
-            GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)
-            entry_scanned = False
-            print("entry no longer scanned")
+            if not GPIO.input(DOOR_ONE_GREEN_LED_PIN):
+                GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.HIGH)
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
+            if(waitTime < currentTimePlusSeconds(1.8)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
+
 
     def door_two_action(type):
         if(type == "bad"):
@@ -184,16 +177,19 @@ def activate_job():
             mystring = mystring + format(i, '02X')
         return mystring
 
+    # method to add seconds to the time passed in
+    def addSecs(tm, secs):
+        fulldate = datetime.datetime(100, 1, 1, tm.hour, tm.minute, tm.second)
+        fulldate = fulldate + datetime.timedelta(seconds=secs)
+        return fulldate.time()
 
-    # # Capture SIGINT for cleanup when the script is aborted
-    # def end_read(signal, frame):
-    #     global continue_reading
-    #     print("Ctrl+C captured, ending read.")
-    #     continue_reading = False
-    #     GPIO.cleanup()
+    def currentTimePlusSeconds(seconds):
+        currentTime = datetime.datetime.now().time()
+        newTime = addSecs(currentTime, seconds)
+        return newTime
 
-    # # Hook the SIGINT
-    # signal.signal(signal.SIGINT, end_read)
+    def timeNow():
+        return datetime.datetime.now().time()
 
     # Create an object of the class MFRC522 for device 0
     MIFAREReader = MFRC522.MFRC522()
@@ -204,30 +200,57 @@ def activate_job():
     # Welcome message
     print("Welcome to the MFRC522 data read example")
     print("Press Ctrl-C to stop.")
+
+
+
     def rfid_scanner_one(name):
+
+        waitTimeGood = timeNow()
+        waitTimeBad = timeNow()
+        global entry_scanned
+        entry_scanned = False
+
         while continue_reading:
 
+
             # Scan for cards
-            (status, TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
+            if (waitTimeGood > timeNow()):
+                door_one_action("good", waitTimeGood)
+            elif (waitTimeBad > timeNow()):
+                door_one_action("bad", waitTimeBad)
+            else:
+                waitTimeGood = timeNow()
+                waitTimeBad = timeNow()
+                GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
+                GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)
+                entry_scanned = False
 
-            # If a card is found
-            if status == MIFAREReader.MI_OK:
-                print ("Card detected on reader 1")
+            if not entry_scanned:
+                (status, TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
 
-                # Get the UID of the card
-                (status, uid) = MIFAREReader.MFRC522_SelectTagSN()
-
-                # If we have the UID, continue
+                # If a card is found
                 if status == MIFAREReader.MI_OK:
-                    guid = tff.find_guid_in_csv_file('uid.csv', uidToString(uid))
-                    if(guid == False):
-                        print("Card UID: %s Not found!" % uidToString(uid))
-                        enter = threading.Thread(target=door_one_action("bad"))
-                        enter.start()
-                    else:
-                        print("Card read GUID: %s" % guid)
-                        enter = threading.Thread(target=door_one_action("good"))
-                        enter.start()
+                    print ("Card detected on reader 1")
+
+                    # Get the UID of the card
+                    (status, uid) = MIFAREReader.MFRC522_SelectTagSN()
+
+                    # If we have the UID, continue
+                    if status == MIFAREReader.MI_OK:
+                        # set the wait time for the event loop
+
+                        guid = tff.find_guid_in_csv_file('uid.csv', uidToString(uid))
+                        if(guid == False):
+                            print("Card UID: %s Not found!" % uidToString(uid))
+                            # door_one_action("bad", waitTime)
+                            waitTimeBad = currentTimePlusSeconds(2)
+                        else:
+                            print("Card read GUID: %s" % guid)
+                            # door_one_action("good", waitTime)
+                            waitTimeGood= currentTimePlusSeconds(2)
+
+
 
     def rfid_scanner_two(name):
         while continue_reading:
@@ -279,6 +302,7 @@ def activate_job():
 def hello():
     return "Hello World!"
 
+# setup values
 BUZZER1=17
 BUZZER2=14
 DOOR_ONE_RED_LED_PIN=21
