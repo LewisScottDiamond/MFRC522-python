@@ -93,29 +93,61 @@ def activate_job():
             if(waitTime < currentTimePlusSeconds(1.8)):
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
 
-
-    def door_two_action(type):
+    def door_two_action(type, waitTime):
+        global entry_scanned
+        entry_scanned = True
         if(type == "bad"):
-            GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.HIGH)
-            for number in range(50):
+            if not GPIO.input(DOOR_TWO_RED_LED_PIN):
+                GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.HIGH)
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
-                time.sleep(0.01)
+            if(timeNow() > addSecs(waitTime, -1.9) and timeNow() < addSecs(waitTime, -1.8)):
+                GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
+            if(timeNow() > addSecs(waitTime, -1.7) and timeNow() < addSecs(waitTime, -1.6)):
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -1.5) and timeNow() < addSecs(waitTime, -1.4)):
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
-                time.sleep(0.01)
-            time.sleep(2)
-            GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -1.3) and timeNow() < addSecs(waitTime, -1.2)):
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -1.1) and timeNow() < addSecs(waitTime, -1)):
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
+            if(timeNow() > addSecs(waitTime, -0.9) and timeNow() < addSecs(waitTime, -0.8)):
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -0.7) and timeNow() < addSecs(waitTime, -0.6)):
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
+            if(timeNow() > addSecs(waitTime, -0.5) and timeNow() < addSecs(waitTime, -0.4)):
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
+            if(timeNow() > addSecs(waitTime, -0.3) and timeNow() < addSecs(waitTime, -0.2)):
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
         else:
-            global entry_scanned
-            exit_scanned = True
-            print("exit scanned")
-            GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.HIGH)
-            GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
-            time.sleep(0.2)
-            GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
-            time.sleep(9.8)
-            GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)
-            exit_scanned = False
-            print("exit no longer scanned")
+            if not GPIO.input(DOOR_TWO_GREEN_LED_PIN):
+                GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.HIGH)
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
+            if(waitTime < currentTimePlusSeconds(1.8)):
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
+
+
+    # def door_two_action_OLD(type):
+    #     if(type == "bad"):
+    #         GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.HIGH)
+    #         for number in range(50):
+    #             GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
+    #             time.sleep(0.01)
+    #             GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
+    #             time.sleep(0.01)
+    #         time.sleep(2)
+    #         GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)
+    #     else:
+    #         global entry_scanned
+    #         exit_scanned = True
+    #         print("exit scanned")
+    #         GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.HIGH)
+    #         GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
+    #         time.sleep(0.2)
+    #         GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
+    #         time.sleep(9.8)
+    #         GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)
+    #         exit_scanned = False
+    #         print("exit no longer scanned")
 
 
     def sound_buzzer(type):
@@ -225,6 +257,7 @@ def activate_job():
 
         waitTimeGood = timeNow()
         waitTimeBad = timeNow()
+        waitTenSecs = timeNow()
         global entry_scanned
         entry_scanned = False
 
@@ -232,6 +265,7 @@ def activate_job():
             # Scan for cards
             if (waitTimeGood > timeNow()):
                 door_one_action("good", waitTimeGood)
+                waitTenSecs = currentTimePlusSeconds(10)
             elif (waitTimeBad > timeNow()):
                 door_one_action("bad", waitTimeBad)
             else:
@@ -240,7 +274,8 @@ def activate_job():
                 GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
                 GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)
-                entry_scanned = False
+                if (waitTenSecs < timeNow()):
+                    entry_scanned = False
 
             if not entry_scanned:
                 (status, TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
@@ -266,32 +301,79 @@ def activate_job():
                             # door_one_action("good", waitTime)
                             waitTimeGood= currentTimePlusSeconds(2)
 
-
-
     def rfid_scanner_two(name):
+
+        waitTimeGood = timeNow()
+        waitTimeBad = timeNow()
+        waitTenSecs = timeNow()
+        global entry_scanned
+        entry_scanned = False
+
         while continue_reading:
-
             # Scan for cards
-            (status2, TagType2) = MIFAREReader2.MFRC522_Request(MIFAREReader.PICC_REQIDL)
+            if (waitTimeGood > timeNow()):
+                door_two_action_new("good", waitTimeGood)
+                waitTenSecs = currentTimePlusSeconds(10)
+            elif (waitTimeBad > timeNow()):
+                door_two_action_new("bad", waitTimeBad)
+            else:
+                waitTimeGood = timeNow()
+                waitTimeBad = timeNow()
+                GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)
+                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
+                GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)
+                if (waitTenSecs < timeNow()):
+                    entry_scanned = False
 
-            # If a card is found
-            if status2 == MIFAREReader2.MI_OK:
-                print ("Card detected on reader 2")
+            if not entry_scanned:
+                (status2, TagType2) = MIFAREReader2.MFRC522_Request(MIFAREReader.PICC_REQIDL)
 
-                # Get the UID of the card
-                (status2, uid2) = MIFAREReader2.MFRC522_SelectTagSN()
-
-                # If we have the UID, continue
+                # If a card is found
                 if status2 == MIFAREReader2.MI_OK:
-                    guid = tff.find_guid_in_csv_file('uid.csv', uidToString(uid2))
-                    if(guid == False):
-                        print("Card UID: %s Not found!" % uidToString(uid2))
-                        exit = threading.Thread(target=door_two_action("bad"))
-                        exit.start()
-                    else:
-                        print("Card read UID: %s" % guid)
-                        exit = threading.Thread(target=door_two_action("good"))
-                        exit.start()
+                    print ("Card detected on reader 1")
+
+                    # Get the UID of the card
+                    (status2, uid2) = MIFAREReader2.MFRC522_SelectTagSN()
+
+                    # If we have the UID, continue
+                    if status2 == MIFAREReader2.MI_OK:
+                        # set the wait time for the event loop
+
+                        guid = tff.find_guid_in_csv_file('uid.csv', uidToString(uid2))
+                        if(guid == False):
+                            print("Card UID: %s Not found!" % uidToString(uid2))
+                            # door_one_action("bad", waitTime)
+                            waitTimeBad = currentTimePlusSeconds(2)
+                        else:
+                            print("Card read GUID: %s" % guid)
+                            # door_one_action("good", waitTime)
+                            waitTimeGood= currentTimePlusSeconds(2)
+
+
+    # def rfid_scanner_two_OLD(name):
+    #     while continue_reading:
+
+    #         # Scan for cards
+    #         (status2, TagType2) = MIFAREReader2.MFRC522_Request(MIFAREReader.PICC_REQIDL)
+
+    #         # If a card is found
+    #         if status2 == MIFAREReader2.MI_OK:
+    #             print ("Card detected on reader 2")
+
+    #             # Get the UID of the card
+    #             (status2, uid2) = MIFAREReader2.MFRC522_SelectTagSN()
+
+    #             # If we have the UID, continue
+    #             if status2 == MIFAREReader2.MI_OK:
+    #                 guid = tff.find_guid_in_csv_file('uid.csv', uidToString(uid2))
+    #                 if(guid == False):
+    #                     print("Card UID: %s Not found!" % uidToString(uid2))
+    #                     exit = threading.Thread(target=door_two_action("bad"))
+    #                     exit.start()
+    #                 else:
+    #                     print("Card read UID: %s" % guid)
+    #                     exit = threading.Thread(target=door_two_action("good"))
+    #                     exit.start()
 
     # Setup the GPIO pins
     GPIO_Setup()
