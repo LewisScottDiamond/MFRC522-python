@@ -14,7 +14,7 @@ import textFileFunctions as tff
 import datetime
 
 
-from flask import Flask
+from flask import Flask, render_template
 app = Flask(__name__)
 
 @app.before_first_request
@@ -63,6 +63,7 @@ def activate_job():
 
     def door_one_action(type, waitTime):
         global entry_scanned
+        global count
         entry_scanned = True
         if(type == "bad"):
             if not GPIO.input(DOOR_ONE_RED_LED_PIN):
@@ -87,6 +88,7 @@ def activate_job():
             if(timeNow() > addSecs(waitTime, -0.3) and timeNow() < addSecs(waitTime, -0.2)):
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
         else:
+            count += 1
             if not GPIO.input(DOOR_ONE_GREEN_LED_PIN):
                 GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.HIGH)
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
@@ -95,6 +97,7 @@ def activate_job():
 
     def door_two_action(type, waitTime):
         global entry_scanned
+        global count
         entry_scanned = True
         if(type == "bad"):
             if not GPIO.input(DOOR_TWO_RED_LED_PIN):
@@ -119,6 +122,7 @@ def activate_job():
             if(timeNow() > addSecs(waitTime, -0.3) and timeNow() < addSecs(waitTime, -0.2)):
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
         else:
+            count -= 1
             if not GPIO.input(DOOR_TWO_GREEN_LED_PIN):
                 GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.HIGH)
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
@@ -213,13 +217,13 @@ def activate_job():
         entry_scanned = False
         print("entry no longer scanned")
 
-    def exitScanned():
-        global exit_scanned
-        exit_scanned = True
-        print("entry scanned")
-        time.sleep(10)
-        exit_scanned = False
-        print("entry no longer scanned")
+    # def exitScanned():
+    #     global exit_scanned
+    #     exit_scanned = True
+    #     print("entry scanned")
+    #     time.sleep(10)
+    #     exit_scanned = False
+    #     print("entry no longer scanned")
 
     def uidToString(uid):
         mystring = ""
@@ -312,10 +316,10 @@ def activate_job():
         while continue_reading:
             # Scan for cards
             if (waitTimeGood > timeNow()):
-                door_two_action_new("good", waitTimeGood)
+                door_two_action("good", waitTimeGood)
                 waitTenSecs = currentTimePlusSeconds(10)
             elif (waitTimeBad > timeNow()):
-                door_two_action_new("bad", waitTimeBad)
+                door_two_action("bad", waitTimeBad)
             else:
                 waitTimeGood = timeNow()
                 waitTimeBad = timeNow()
@@ -398,7 +402,12 @@ def activate_job():
 
 @app.route("/")
 def hello():
-    return "Hello World!"
+    return "hello world"
+
+@app.route("/count")
+def count():
+    global count
+    return render_template("home.html", count=count)
 
 # setup values
 BUZZER1=17
@@ -411,6 +420,7 @@ DOOR_SENSOR_PIN = 26
 DOOR_SENSOR_PIN2 = 19
 entry_scanned = False
 exit_scanned = False
+count = 0
 
 def start_runner():
     def start_loop():
