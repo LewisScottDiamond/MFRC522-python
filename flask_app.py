@@ -122,7 +122,10 @@ def activate_job():
             if(timeNow() > addSecs(waitTime2, -0.3) and timeNow() < addSecs(waitTime2, -0.2)):
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
         else:
-            count -= 1
+            if (count > 0 ):
+                count -= 1
+            else:
+                count = 0
             if not GPIO.input(DOOR_TWO_GREEN_LED_PIN):
                 GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.HIGH)
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
@@ -261,7 +264,7 @@ def activate_job():
 
         waitTimeGood = timeNow()
         waitTimeBad = timeNow()
-        waitTenSecs = timeNow()
+        waitSecs = timeNow()
         global entry_scanned
         entry_scanned = False
 
@@ -269,18 +272,19 @@ def activate_job():
             # Scan for cards
             if (waitTimeGood > timeNow()):
                 door_one_action("good", waitTimeGood)
-                waitTenSecs = currentTimePlusSeconds(10)
+                waitSecs = currentTimePlusSeconds(10)
             elif (waitTimeBad > timeNow()):
                 door_one_action("bad", waitTimeBad)
+                waitSecs = currentTimePlusSeconds(1)
             else:
                 waitTimeGood = timeNow()
                 waitTimeBad = timeNow()
                 GPIO.output(DOOR_ONE_RED_LED_PIN, GPIO.LOW)
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
                 GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.LOW)
-                if (waitTenSecs < timeNow()):
+                if (waitSecs < timeNow()):
                     entry_scanned = False
-
+            print("reader one running")
             if not entry_scanned:
                 (status, TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
 
@@ -309,7 +313,7 @@ def activate_job():
 
         waitTimeGood2 = timeNow()
         waitTimeBad2 = timeNow()
-        waitTenSecs2 = timeNow()
+        waitSecs2 = timeNow()
         global exit_scanned
         exit_scanned = False
 
@@ -317,18 +321,19 @@ def activate_job():
             # Scan for cards
             if (waitTimeGood2 > timeNow()):
                 door_two_action("good", waitTimeGood2)
-                waitTenSecs2 = currentTimePlusSeconds(10)
+                waitSecs2 = currentTimePlusSeconds(10)
             elif (waitTimeBad2 > timeNow()):
                 door_two_action("bad", waitTimeBad2)
+                waitSecs2 = currentTimePlusSeconds(1)
             else:
                 waitTimeGood2 = timeNow()
                 waitTimeBad2 = timeNow()
                 GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
                 GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)
-                if (waitTenSecs2 < timeNow()):
+                if (waitSecs2 < timeNow()):
                     exit_scanned = False
-
+            print("reader two runnung")        
             if not exit_scanned:
                 (status2, TagType2) = MIFAREReader2.MFRC522_Request(MIFAREReader.PICC_REQIDL)
 
