@@ -358,32 +358,6 @@ def activate_job():
                             # door_one_action("good", waitTime)
                             waitTimeGood2 = currentTimePlusSeconds(2)
 
-
-    # def rfid_scanner_two_OLD(name):
-    #     while continue_reading:
-
-    #         # Scan for cards
-    #         (status2, TagType2) = MIFAREReader2.MFRC522_Request(MIFAREReader.PICC_REQIDL)
-
-    #         # If a card is found
-    #         if status2 == MIFAREReader2.MI_OK:
-    #             print ("Card detected on reader 2")
-
-    #             # Get the UID of the card
-    #             (status2, uid2) = MIFAREReader2.MFRC522_SelectTagSN()
-
-    #             # If we have the UID, continue
-    #             if status2 == MIFAREReader2.MI_OK:
-    #                 guid = tff.find_guid_in_csv_file('uid.csv', uidToString(uid2))
-    #                 if(guid == False):
-    #                     print("Card UID: %s Not found!" % uidToString(uid2))
-    #                     exit = threading.Thread(target=door_two_action("bad"))
-    #                     exit.start()
-    #                 else:
-    #                     print("Card read UID: %s" % guid)
-    #                     exit = threading.Thread(target=door_two_action("good"))
-    #                     exit.start()
-
     # Setup the GPIO pins
     GPIO_Setup()
 
