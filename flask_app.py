@@ -88,9 +88,10 @@ def activate_job():
             if(timeNow() > addSecs(waitTime, -0.3) and timeNow() < addSecs(waitTime, -0.2)):
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
         else:
-            count += 1
+
             if not GPIO.input(DOOR_ONE_GREEN_LED_PIN):
                 GPIO.output(DOOR_ONE_GREEN_LED_PIN, GPIO.HIGH)
+                count += 1
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
             if(waitTime < currentTimePlusSeconds(1.8)):
                 GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
@@ -122,39 +123,16 @@ def activate_job():
             if(timeNow() > addSecs(waitTime2, -0.3) and timeNow() < addSecs(waitTime2, -0.2)):
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
         else:
-            if (count > 0 ):
-                count -= 1
-            else:
-                count = 0
+
             if not GPIO.input(DOOR_TWO_GREEN_LED_PIN):
                 GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.HIGH)
+                if (count > 0 ):
+                    count -= 1
+                else:
+                    count = 0
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
             if(waitTime2 < currentTimePlusSeconds(1.8)):
                 GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
-
-
-    # def door_two_action_OLD(type):
-    #     if(type == "bad"):
-    #         GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.HIGH)
-    #         for number in range(50):
-    #             GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
-    #             time.sleep(0.01)
-    #             GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
-    #             time.sleep(0.01)
-    #         time.sleep(2)
-    #         GPIO.output(DOOR_TWO_RED_LED_PIN, GPIO.LOW)
-    #     else:
-    #         global entry_scanned
-    #         exit_scanned = True
-    #         print("exit scanned")
-    #         GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.HIGH)
-    #         GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
-    #         time.sleep(0.2)
-    #         GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
-    #         time.sleep(9.8)
-    #         GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)
-    #         exit_scanned = False
-    #         print("exit no longer scanned")
 
 
     def sound_buzzer(type):
@@ -169,20 +147,6 @@ def activate_job():
             GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.LOW)
             time.sleep(1)
             GPIO.setup(BUZZER1, GPIO.OUT, initial=GPIO.HIGH)
-
-
-    def sound_buzzer2(type):
-        print("start buzzer")
-        if (type == "bad"):
-            for number in range(50):
-                GPIO.setup(buzzer2, GPIO.OUT, initial=GPIO.LOW)
-                time.sleep(0.01)
-                GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
-                time.sleep(0.02)
-        else:
-            GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.LOW)
-            time.sleep(0.5)
-            GPIO.setup(BUZZER2, GPIO.OUT, initial=GPIO.HIGH)
 
     def check_door1():
         while continue_reading:
@@ -285,7 +249,7 @@ def activate_job():
                 if (waitSecs < timeNow()):
                     entry_scanned = False
             print("reader one running")
-            if not entry_scanned:
+            if (waitTimeGood < timeNow()):
                 (status, TagType) = MIFAREReader.MFRC522_Request(MIFAREReader.PICC_REQIDL)
 
                 # If a card is found
@@ -333,8 +297,8 @@ def activate_job():
                 GPIO.output(DOOR_TWO_GREEN_LED_PIN, GPIO.LOW)
                 if (waitSecs2 < timeNow()):
                     exit_scanned = False
-            print("reader two runnung")        
-            if not exit_scanned:
+            print("reader two runnung")
+            if (waitTimeGood2 < timeNow()):
                 (status2, TagType2) = MIFAREReader2.MFRC522_Request(MIFAREReader.PICC_REQIDL)
 
                 # If a card is found
